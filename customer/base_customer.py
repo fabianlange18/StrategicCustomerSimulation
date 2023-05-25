@@ -5,6 +5,8 @@ import config
 
 class Customer(ABC):
 
+    last_prices = []
+
     def __init__(self):
         self.name = "undefined"
 
@@ -13,4 +15,4 @@ class Customer(ABC):
         raise NotImplementedError
     
     def calculate_weight(self, price, reference_price):
-        return - (config.λ * np.exp(price - reference_price) - price) / reference_price + config.λ
+        return ( -config.λ * np.exp(price - reference_price) - price) / reference_price + config.λ

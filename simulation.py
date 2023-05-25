@@ -15,7 +15,7 @@ def simulate_policy(model):
     print(f"\nSimulating Environment")
     for i in trange(config.number_of_simulation_episodes * config.episode_length):
 
-        action = model.predict(s_next)[0]
+        action = model.predict(s_next, deterministic=True)[0]
         s_next, reward, done, info = e.step(np.array(action), simulation_mode=True)
     
         for key in info.keys():

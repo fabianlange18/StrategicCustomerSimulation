@@ -5,45 +5,36 @@ from customer.anticipating import Anticipating_Customer
 
 # WANDB
 project_name = "Master Thesis" # DO NOT CHANGE
-run_name = ""
+run_name = "Try evaluation statistics"
 run_notes = ""
+mode = 'disabled'
 
 # RL Parameters
 rl_policy = 'MlpPolicy'
-constant_learning_rate = True
-initial_learning_rate = 0.0003 # decreases linearly to 0 if constant_learning_rate = False
+gamma = 1 # Do not discount for now
+constant_learning_rate = True # did not turn out to be successful for now
+initial_learning_rate = 0.00003 # decreases linearly to 0 if constant_learning_rate = False
 
 # Training & Simulation
 episode_length = 70
-rl_algorithm = 'sac'
-number_of_training_episodes = 10000
+rl_algorithm = 'ppo'
+number_of_training_episodes = 100000
 number_of_simulation_episodes = 1
 
 # Market
-number_of_customers = 20
+number_of_customers = 100
 number_of_vendors = 1
 
 # Customer
 reference_price = 5
 λ = 4
 nothing_preference = 1
-seasonal_reference_prices = [3, 5, 4, 5, 6, 7, 5] ### mean = 5
-
-# best prices (https://www.geogebra.org/graphing/kesahyyb):
-#  1 ->  0.54
-#  2 ->  1.64
-#  3 ->  2.76
-#  4 ->  3.85
-#  5 ->  4.92
-#  6 ->  5.97
-#  7 ->  7.02
-#  8 ->  8.06
-#  9 ->  9.10
-# 10 -> 10.13
+seasonal_reference_prices = [3, 5, 4, 5, 6, 7, 5] # mean = 5
+# pricing functions: https://www.geogebra.org/graphing/kesahyyb
 
 # Customer setup (mix must sum to 1)
-customers: list[Customer] = [Seasonal_Customer()]
-customer_mix = [1.0]
+customers: list[Customer] = [Seasonal_Customer(), Anticipating_Customer()]
+customer_mix = [0.9, 0.1]
 
 # Vendor
 # Until now only using one single (monopolistic) vendor that is represented by the agent
@@ -58,6 +49,8 @@ support_continuous_action_space = True
 
 logged_config = {
     "rl_policy" : rl_policy,
+    "gamma" : gamma,
+    "constant_learning_rate" : constant_learning_rate,
     "initial_learning_rate" : initial_learning_rate,
     "episode_length" : episode_length,
     "rl_algorithm" : rl_algorithm,

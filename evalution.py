@@ -1,20 +1,30 @@
 import wandb
+import config
 import numpy as np
 import matplotlib.pyplot as plt
 
-import config
+from customer.seasonal import Seasonal_Customer
+
+from util.calc_optimal_policy import calculate_optimal_policy_seasonal, print_policy_stats, calculate_expected_reward, calculate_difference
+
+def evaluate_model(infos, model):
+    print_simulation_statistics(infos)
+    plot_trajectories(infos)
+    if any([isinstance(customer, Seasonal_Customer) for customer in config.customers]):
+        print_policy_statistics(model)
 
 
-def evaluate_model(infos):
-    
+def print_simulation_statistics(infos):
     print("\nStatistics:")
-    print(f'{"Property": >40}{"Mean": >10}{"Std": >12}{"Min": >10}{"Median": >13}{"Max": >13}\n')
+    print(f'{"Property": >40}{"Sum": >10}{"Mean": >12}{"Std": >10}{"Min": >12}{"Median": >14}{"Max": >13}\n')
 
     for key in infos.keys():
-        stats = [np.mean(infos[key]), np.std(infos[key]), np.min(infos[key]), np.median(infos[key]), np.max(infos[key])]
-        print(f'{key: >40}{stats[0]: >10.2f}{stats[1]: >12.2f}{stats[2]: >10.2f}{stats[3]: >13.2f}{stats[4]: >13.2f}')
+        stats = [np.sum(infos[key]), np.mean(infos[key]), np.std(infos[key]), np.min(infos[key]), np.median(infos[key]), np.max(infos[key])]
+        print(f'{key: >40}{stats[0]: >10.2f}{stats[1]: >12.2f}{stats[2]: >10.2f}{stats[3]: >13.2f}{stats[4]: >13.2f}{stats[5]: >13.2f}')
     print()
 
+
+def plot_trajectories(infos):
     customers = config.customers
 
     fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
@@ -49,3 +59,18 @@ def evaluate_model(infos):
     fig.legend(handles, labels)
     plt.show()
     wandb.log({'simulation_summary': fig})
+
+
+def print_policy_statistics(model):
+    actual_prices = [model.predict([s, 0], deterministic=True)[0][0] for s in range(config.week_length)]
+    expected_profits_per_customer = calculate_expected_reward(actual_prices)
+    print("\nACTUAL")
+    print_policy_stats(actual_prices, expected_profits_per_customer)
+    
+    print("\nOPTIMAL")
+    optimal_prices, optimal_profits_per_customer = calculate_optimal_policy_seasonal()
+    print_policy_stats(optimal_prices, optimal_profits_per_customer)
+
+    print("\nPERFORMANCE")
+    print(f"Prices: {round(calculate_difference(actual_prices, optimal_prices), 3)}")
+    print(f"Profits: {round(calculate_difference(expected_profits_per_customer, optimal_profits_per_customer), 3)}\n\n\n\n")

@@ -2,7 +2,8 @@
 
 import wandb
 import config
-import numpy as np
+from customer.base_customer import Customer
+from util.calc_optimal_policy import calculate_optimal_policy_seasonal, calculate_expected_reward, calculate_difference
 
 from stable_baselines3.common.callbacks import BaseCallback, EveryNTimesteps
 
@@ -13,6 +14,8 @@ class PolicyCallback(BaseCallback):
     :param verbose: Verbosity level: 0 for no output, 1 for info messages, 2 for debug messages
     """
     def __init__(self, verbose=0):
+        self.optimal_prices, self.optimal_profits = calculate_optimal_policy_seasonal()
+
         super(PolicyCallback, self).__init__(verbose)
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
@@ -48,15 +51,12 @@ class PolicyCallback(BaseCallback):
 
     def _on_step(self) -> bool:
 
-        # print(f'\n\nTraining of {self.num_timesteps} timesteps done - Resulting Pricing Policy (empty waiting pool):')
-        for s in range(config.week_length):
-            predictions = []
-            for _ in range(1000):
-                predictions.append(self.model.predict([s, 0])[0][0])
-            # print(f'State {s}: {np.mean(predictions): >3.2f} € (std: {np.std(predictions): >3.3f})')
-            wandb.log({f'Mean_State_{s}' : np.mean(predictions)})
-            wandb.log({f'Std_State_{s}' : np.std(predictions)})
-        
+        actual_prices = [self.model.predict([s, 0], deterministic=True)[0][0] for s in range(config.week_length)]
+        Customer.last_prices = actual_prices
+        [wandb.log({f'Mean_State_{s}' : actual_price}, step=self.n_calls) for s, actual_price in enumerate(actual_prices)]
+        expected_profits_per_customer = calculate_expected_reward(actual_prices)
+        wandb.log({'Price_Diff': calculate_difference(actual_prices, self.optimal_prices)}, step=self.n_calls)
+        wandb.log({'Profit_Diff': calculate_difference(expected_profits_per_customer, self.optimal_profits)}, step=self.n_calls)
         """
         This method will be called by the model after each call to `env.step()`.
 

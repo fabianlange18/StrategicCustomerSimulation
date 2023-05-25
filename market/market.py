@@ -42,10 +42,18 @@ class Market(Env):
             customer_decisions = np.random.multinomial(customer_arrivals[i], probability_distribution.tolist())
             info[f"n_{customer.name}_buy"] = customer_decisions[1]
             info[f"{customer.name}_reference_price"] = reference_price
-            info[f"{customer.name}_reward"] = customer_decisions[1] * action[0]
             # TODO: consumer rent is not accurately defined but can be taken as a measure for now
             info[f"{customer.name}_consumer_rent"] = customer_decisions[1] * (config.max_price - action[0])
+            
+            # WITH STOCHASTIC CUSTOMERS:
+            info[f"{customer.name}_reward"] = customer_decisions[1] * action[0]
             reward += customer_decisions[1] * action[0]
+            
+            # WITHOUT STOCHASTIC CUSTOMERS:
+            # info[f"{customer.name}_reward"] = probability_distribution[1] * action[0] * customer_arrivals[i]
+            # reward += probability_distribution[1] * action[0] * customer_arrivals[i]
+
+        info["total_reward"] = reward
 
         self.s[0] += 1
         self.s[0] %= 7
@@ -53,7 +61,7 @@ class Market(Env):
 
         done = self.step_counter == config.episode_length
 
-        if not simulation_mode and self.step_counter % config.episode_length == 0:
+        if not simulation_mode and self.step_counter % config.episode_length < config.week_length:
             wandb.log(info)
 
         return self.s, float(reward), done, info
