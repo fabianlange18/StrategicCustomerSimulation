@@ -9,6 +9,7 @@ class Customer(ABC):
 
     def __init__(self):
         self.name = "undefined"
+        self.ability_to_wait = False
 
     @abstractmethod
     def generate_purchase_probabilities_from_offer(self, state, action) -> np.array:

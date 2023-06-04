@@ -11,23 +11,17 @@ from util.softmax import softmax
 
 class Anticipating_Customer(Customer):
 
-    # NUMBER_OF_TIMESTEPS_SAVING = 25
-    NUMBER_OF_TIMESTEPS_PREDICTING = 7
-    NUMBER_OF_LAGS = 7
-
     def __init__(self):
         self.name = "anticipating"
-        # self.last_prices = [deque([], maxlen=self.NUMBER_OF_TIMESTEPS_SAVING) for _ in range(self.NUMBER_OF_VENDORS)]
-        self.predictions = np.ndarray((config.number_of_vendors, self.NUMBER_OF_TIMESTEPS_PREDICTING))
+        self.ability_to_wait = True
+        self.last_prices = [deque([], maxlen=config.n_timesteps_saving) for _ in range(config.n_vendors)]
+        self.predictions = np.ndarray((config.n_vendors, config.n_timesteps_predicting))
 
     def generate_purchase_probabilities_from_offer(self, state, action) -> Tuple[np.array, int]:
 
-        # Append the price to the stored prices
-        # [self.last_prices[i].append(action[i]) for i in range(self.NUMBER_OF_VENDORS)]
-
         weights = [config.nothing_preference]
 
-        if self.predict_next_prices() and state[0] == np.argmin(self.predictions[0]):
+        if self.predict_next_prices() and action[0] < min(self.predictions[0]):
 
             reference_price = config.seasonal_reference_prices[state[0]]
 
@@ -39,14 +33,16 @@ class Anticipating_Customer(Customer):
         else:
             weights.append(-10)
 
+        # Append the price to the stored prices
+        [self.last_prices[i].append(action[i]) for i in range(config.n_vendors)]
+
         return softmax(np.array(weights)), self.predictions[0][state[0]]
     
     def predict_next_prices(self):
-        if len(self.last_prices) == config.week_length:
-            # self.predictions = [
-            #     AutoReg(list(self.last_prices) * 3, lags = self.NUMBER_OF_LAGS)
-            #     .fit()
-            #     .predict(start= len(self.last_prices), end= len(self.last_prices) + self.NUMBER_OF_TIMESTEPS_PREDICTING - 1)
-            #         for i in range(config.number_of_vendors)]
-            self.predictions = [self.last_prices]
-        return len(self.last_prices) == config.week_length
+        if len(self.last_prices[0]) == config.n_timesteps_saving:
+            self.predictions = [
+                AutoReg(list(self.last_prices[0]), lags = config.n_lags)
+                .fit()
+                .predict(start= len(self.last_prices[0]), end= len(self.last_prices[0]) + config.n_timesteps_predicting - 1)
+                    for i in range(config.n_vendors)]
+        return len(self.last_prices[0]) == config.n_timesteps_saving

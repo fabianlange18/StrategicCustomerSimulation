@@ -42,8 +42,10 @@ def calculate_difference(actual, optimal):
 
 
 def print_policy_stats(prices, profits_per_customer):
+
+    seasonal_index = [isinstance(customer, Seasonal_Customer) for customer in config.customers].index(True)
     
-    profits_all_customers = np.multiply(profits_per_customer, config.number_of_customers)
+    profits_all_customers = np.multiply(profits_per_customer, config.n_customers * config.customer_mix[seasonal_index])
 
     week_rewards = np.sum(profits_all_customers)
     episode_rewards = week_rewards * int(config.episode_length / config.week_length)
@@ -54,8 +56,10 @@ def print_policy_stats(prices, profits_per_customer):
     rounded_optimal_week_rewards = round(week_rewards, 2)
     rounded_optimal_episode_rewards = round(episode_rewards, 2)
 
-    print(f'Policy Statistics for Prices: {rounded_prices}')
-    print(f'Profits per Customer: {rounded_profits_per_cust}')
-    print(f'Profits all Customers: {rounded_profits_all_cust}')
-    print(f'Reward per Week: {rounded_optimal_week_rewards}')
-    print(f'Reward per Episode: {rounded_optimal_episode_rewards}')
+    f = open(f'{config.summary_dir}{config.summary_file}', 'a')
+    f.write(f'Policy Statistics for Prices: {rounded_prices}\n')
+    f.write(f'Profits per Customer: {rounded_profits_per_cust}\n')
+    f.write(f'Profits all Customers: {rounded_profits_all_cust}\n')
+    f.write(f'Reward per Week: {rounded_optimal_week_rewards}\n')
+    f.write(f'Reward per Episode: {rounded_optimal_episode_rewards}\n')
+    f.close()

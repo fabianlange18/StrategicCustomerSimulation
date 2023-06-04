@@ -6,9 +6,12 @@ import config
 
 from training import train_model
 from simulation import simulate_policy
-from evalution import evaluate_model
+from evalution import evaluate_model, setup_results_folder
 
 def main():
+
+    config.customers = [customer() for customer in config.customers]
+    setup_results_folder()
     
     run = wandb.init(
         project=config.project_name,
@@ -18,7 +21,7 @@ def main():
         config=config.logged_config,
         mode= config.mode
     )
-    
+
     model = train_model()
     infos = simulate_policy(model)
     evaluate_model(infos, model)

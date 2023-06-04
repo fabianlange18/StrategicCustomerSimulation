@@ -8,15 +8,16 @@ from stable_baselines3.td3 import TD3
 from stable_baselines3.common.monitor import Monitor
 
 from util.schedule import linear_schedule
-from util.policy_print_callback import policy_callback
+from util.callbacks.policy_evaluation_callback import policy_evaluation_callback
+from util.callbacks.simulation_plot_callback import simulation_plot_callback
 
 from wandb.integration.sb3 import WandbCallback
 
 def train_model():
 
         model = select_model()
-        print(f"\nTraining {config.rl_algorithm} model: {config.number_of_training_episodes} training episodes with each {config.episode_length} steps")
-        model.learn(config.episode_length * config.number_of_training_episodes, callback=[WandbCallback(), policy_callback], progress_bar=True)
+        print(f"\nTraining {config.rl_algorithm} model: {config.n_training_episodes} training episodes with each {config.episode_length} steps")
+        model.learn(config.episode_length * config.n_training_episodes, callback=[WandbCallback(), policy_evaluation_callback, simulation_plot_callback], progress_bar=True)
         
         return model
 

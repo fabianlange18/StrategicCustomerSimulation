@@ -9,6 +9,7 @@ class Seasonal_Customer(Customer):
 
     def __init__(self):
         self.name = "seasonal"
+        self.ability_to_wait = False
 
     def generate_purchase_probabilities_from_offer(self, state, action) -> Tuple[np.array, int]:
 

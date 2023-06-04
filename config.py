@@ -1,11 +1,12 @@
 from customer.base_customer import Customer
 from customer.myopic import Myopic_Customer
 from customer.seasonal import Seasonal_Customer
+from customer.price_aware import Price_Aware_Customer
 from customer.anticipating import Anticipating_Customer
 
 # WANDB
-project_name = "Master Thesis" # DO NOT CHANGE
-run_name = "Try evaluation statistics"
+project_name = "[dev] Strategic Customer Simulation" # DO NOT CHANGE
+run_name = "Reproduce_Price_Aware"
 run_notes = ""
 mode = 'disabled'
 
@@ -18,12 +19,16 @@ initial_learning_rate = 0.00003 # decreases linearly to 0 if constant_learning_r
 # Training & Simulation
 episode_length = 70
 rl_algorithm = 'ppo'
-number_of_training_episodes = 100000
-number_of_simulation_episodes = 1
+n_training_episodes = 150000
+n_simulation_episodes = 1
+
+# Callbacks
+peval_cb_n_episodes = 10000
+plot_cb_n_episodes = 10000
 
 # Market
-number_of_customers = 100
-number_of_vendors = 1
+n_customers = 50
+n_vendors = 1
 
 # Customer
 reference_price = 5
@@ -33,19 +38,30 @@ seasonal_reference_prices = [3, 5, 4, 5, 6, 7, 5] # mean = 5
 # pricing functions: https://www.geogebra.org/graphing/kesahyyb
 
 # Customer setup (mix must sum to 1)
-customers: list[Customer] = [Seasonal_Customer(), Anticipating_Customer()]
-customer_mix = [0.9, 0.1]
+customers: list[Customer] = [Price_Aware_Customer] #[Seasonal_Customer, Anticipating_Customer]
+customer_mix = [1]
+stochastic_customers = True
+
+# Anticipating Customer
+n_timesteps_saving = 5
+n_timesteps_predicting = 7
+n_lags = 7
 
 # Vendor
 # Until now only using one single (monopolistic) vendor that is represented by the agent
 
 # State Space
 week_length = 7
-max_waiting_pool = 100
+max_waiting_pool = 1000
 
 # Action Space
 max_price = 10.0
 support_continuous_action_space = True
+
+# Results
+plot_dir = f"./results/{run_name}/plots/"
+summary_dir = f"./results/{run_name}/"
+summary_file = "summary.txt"
 
 logged_config = {
     "rl_policy" : rl_policy,
@@ -54,9 +70,9 @@ logged_config = {
     "initial_learning_rate" : initial_learning_rate,
     "episode_length" : episode_length,
     "rl_algorithm" : rl_algorithm,
-    "number_of_training_episodes" : number_of_training_episodes,
-    "number_of_customers" : number_of_customers,
-    "number_of_vendors" : number_of_vendors,
+    "n_training_episodes" : n_training_episodes,
+    "n_customers" : n_customers,
+    "n_vendors" : n_vendors,
     "reference_price" : reference_price,
     "λ" : λ,
     "nothing_preference" : nothing_preference,
