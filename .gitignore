@@ -1,9 +1,11 @@
-/wandb/*
-/logs/*
-/plots/*
-/results/*
-
+# Python
 *.pyc
 __pycache__
 
+# System
 .DS_Store
+
+# Output files
+/wandb/*
+/tensorboard/*
+/results/*
