@@ -6,6 +6,7 @@ from gym.spaces.box import Box
 import wandb
 import config
 import numpy as np
+from collections import defaultdict
 
 from customers._1_myopic import Myopic_Customer as myopic
 from customers._2_seasonal import Seasonal_Customer as seasonal
@@ -44,64 +45,87 @@ class Market(Env):
 
 
     def step(self, action, simulation_mode=False):
-        
-        reward = 0.0
+
+        reward = [0.0, 0.0]
+        competitor_profit = [0.0, 0.0]
 
         # Simulate customer arrivals
         customer_arrivals = self.simulate_customer_arrivals(simulation_mode)
 
+        # Add waiting customers
+        state_index = 1
+        for i, customer in enumerate(self.customers):
+            if customer.ability_to_wait:
+                customer_arrivals[i] += self.s[state_index]
+                self.s[state_index] = 0
+                state_index += 1
+        
+        # Init Logging
+        info = defaultdict(int)
+
         # Include competitor offer
         if self.competitor is not None:
             action = np.append(action, self.competitor.price)
+            info["i0_competitor_offer_price"] = action[1]
 
         # Logging
-        info = {}
-        info["agent_offer_price"] = action[0]
+        info["i0_agent_offer_price"] = action[0]
+        info["i1_agent_offer_price"] = action[0]
         for i, customer in enumerate(self.customers):
-            info[f"n_{customer.name}"] = customer_arrivals[i] * (1 + config.undercutting_competitor)
+            info[f"i0_n_{customer.name}"] = customer_arrivals[i]
+            info[f"i1_n_{customer.name}"] = customer_arrivals[i]
 
-        # Simulate 1/2, let the competitor update his price and simulate the second 1/2
-        for _ in range(config.undercutting_competitor + 1):
+        # Devide customer arrivals by 2 if there is a competitor
+        customer_arrivals = customer_arrivals / (1 + config.undercutting_competitor)
+
+
+        #### First vendor iteration ####
+
+        for i in range(1 + config.undercutting_competitor):
             
             state_index = 1
 
-            customer_arrivals = customer_arrivals / (config.undercutting_competitor + 1)
+            if i == 1:
+                # Update Price of Competitor after the first iteration
+                if config.undercutting_competitor:
+                    action = np.array([action[0], self.competitor.update_price(action[0])])
+                    info['i1_competitor_offer_price'] = action[1]
 
             # Simulate every customer
-            for i, customer in enumerate(self.customers):
+            for j, customer in enumerate(self.customers):
 
-                # Add waiting customers
-                if customer.ability_to_wait:
-                    customer_arrivals[i] += self.s[state_index]
-
-                # Calculate purchase probabilities
+                # Calculate purchase probabilities first iteration
                 probability_distribution, reference_price = customer.generate_purchase_probabilities_from_offer(self.s, action)
 
                 # Simulate customer decisions
                 if config.stochastic_customers:
-                    customer_decisions = np.random.multinomial(customer_arrivals[i], probability_distribution.tolist())
+                    customer_decisions = np.random.multinomial(customer_arrivals[j], probability_distribution.tolist())
                 else:
-                    customer_decisions = probability_distribution * customer_arrivals[i]
-                
+                    customer_decisions = probability_distribution * customer_arrivals[j]
+
                 # Calculate reward
-                customer_reward = probability_distribution[1] * action[0] * customer_arrivals[i]
-                reward += customer_reward
+                customer_reward = customer_decisions[1] * action[0]
+
+                if config.undercutting_competitor:
+                    customer_competitor_profit = customer_decisions[2] * action[1]
+                    competitor_profit[i] += customer_competitor_profit
+                reward[i] += customer_reward
+
+                # Logging
+                info[f"i{i}_n_{customer.name}_buy"] = customer_decisions[1]
+                if config.undercutting_competitor:
+                    info[f"i{i}_n_{customer.name}_competitor_buy"] = customer_decisions[2]
+                    info[f"i{i}_{customer.name}_competitor_reward"] = customer_competitor_profit
+                info[f"i{i}_{customer.name}_reference_price"] = reference_price
+                info[f"i{i}_{customer.name}_reward"] = customer_reward
 
                 # Not buying customers enter waiting pool
                 if customer.ability_to_wait:
-                    self.s[state_index] = min(customer_decisions[0], config.max_waiting_pool - 1)
+                    self.s[state_index] += customer_decisions[0]
+                    self.s[state_index] = min(self.s[state_index], config.max_waiting_pool - 1)
+                    info[f"i{i}_n_{customer.name}_waiting"] += self.s[state_index]
                     state_index += 1
-                    info[f"n_{customer.name}_waiting"] = self.s[state_index]
 
-                # Logging
-                info[f"n_{customer.name}_buy"] = customer_decisions[1]
-                info[f"{customer.name}_reference_price"] = reference_price
-                info[f"{customer.name}_reward"] = customer_reward
-
-            # Update Price of Competitor after the first iteration
-            if config.undercutting_competitor:
-                action = np.array([action[0], self.competitor.update_price(action[0])])
-                info['competitor_offer_price'] = action[1]
 
         # Store last (own) prices in last state dimensions
         if config.n_timesteps_saving > 0:
@@ -117,11 +141,12 @@ class Market(Env):
         done = self.s[0] == config.episode_length
 
         # Logging
-        info["total_reward"] = reward
+        info["i0_total_reward"], info["i1_total_reward"] = reward[0], reward[1]
+        info["i0_total_competitor_reward"], info["i1_total_competitor_reward"] = competitor_profit[0], competitor_profit[1]
         if not simulation_mode and self.s[0] % config.episode_length < config.week_length:
             wandb.log(info)
 
-        return self.s, float(reward), done, info
+        return self.s, float(sum(reward)), done, info
 
 
     def init_customers(self):
@@ -137,13 +162,12 @@ class Market(Env):
             config.customer_mix = [1 - self.step_counter / config.total_training_steps, self.step_counter / config.total_training_steps]
             if min(config.customer_mix) < 0:
                 config.customer_mix = [0, 1]
-        # Devide n customers for each vendor iteration
-        customers_per_vendor_iteration = config.n_customers / (1 + config.undercutting_competitor)
+        
         # usual drawing
         if config.stochastic_customers:
-            return np.random.multinomial(customers_per_vendor_iteration, config.customer_mix)
+            return np.random.multinomial(config.n_customers, config.customer_mix)
         else:
-            return np.multiply(config.customer_mix, customers_per_vendor_iteration)
+            return np.multiply(config.customer_mix, config.n_customers)
 
 
     def reset(self):

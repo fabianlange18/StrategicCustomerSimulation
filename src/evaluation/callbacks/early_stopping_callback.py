@@ -2,6 +2,7 @@
 
 import config as config
 import numpy as np
+import os
 from stable_baselines3.common.callbacks import BaseCallback
 
 from market.simulation import simulate_policy
@@ -19,7 +20,7 @@ class EarlyStoppingCallback(BaseCallback):
 
         self.n_steps = n_steps
         self.last_time_trigger = 0
-        self.min_passes = int(config.early_stopping_cb_n_episodes / 3)
+        self.min_passes = int(config.n_training_episodes * config.episode_length / n_steps * 0.03)
 
         self.customers = Market().customers
 
@@ -55,18 +56,33 @@ class EarlyStoppingCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
 
+        continue_training = True
+
         if (self.num_timesteps - self.last_time_trigger) >= self.n_steps:
             self.last_time_trigger = self.num_timesteps
 
             infos = simulate_policy(self.model, deterministic=True, prog_bar=False)
-            reward = np.sum([infos[f'{customer.name}_reward'] for customer in self.customers])
+            reward = np.sum(infos[f'i0_total_reward'] + infos[f'i1_total_reward'])
             self.rewards.append(reward)
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(config.run_name)
+            if len(self.rewards) > 10:
+                print(f'Current reward: {round(self.rewards[-1], 2)}, before: {[round(element, 2) for element in self.rewards[-10:-1]]}')
+                print(f'Threshold [0.5 % of Mean]: {np.mean(self.rewards[-10:]) * 0.0005}')
+                print(f'Std: {np.std(self.rewards[-10:])}')
+
+            if np.std(self.rewards[-10:]) < np.mean(self.rewards[-10:]) * 0.0005:
+                continue_training = False
 
             if self.min_passes != 0:
                 self.min_passes -= 1
-                return True
-            else:
-                # somehow it does not work to insert the boolean state directly into return
-                if np.std(self.rewards[-10:]) < 5:
-                    self.evaluator.write_output(f"\nTraining aborted after {self.num_timesteps} training steps")
-                    return False
+                continue_training = True
+
+            if not continue_training:
+                self.evaluator.write_output(f"\nTraining aborted after {self.num_timesteps} training steps because of conversion")
+            
+        return continue_training
+                
+    def _on_training_end(self):
+
+        pass

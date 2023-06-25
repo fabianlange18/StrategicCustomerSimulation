@@ -1,0 +1,19 @@
+Literatur:
+- wichtige Autoren in dem Gebiet / Standards
+
+Competitor:
+- Monopol kein Edgeworth: Richtig?
+- race to the buttom: nur wenn Kaufwahrscheinlichkeit 0 bei höherem Preis
+-> Schrittweite Undercutting_Vendor kleiner
+
+Logging Strategie:
+- Competitor logging + std(prices) fehlt noch, ansonsten in Ordnung?
+- Halbe Perioden loggen (done)
+
+Callbacks:
+- Early Stopping nach 10 mal std(reward) < 5
+-> 1 % of total rewards
+
+Strategic Customer:
+- Action Space arbitrary: Percentage of available customers buying?
+- Test: RL-Kunde gegen SS + Undercutting_Vendor

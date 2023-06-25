@@ -31,7 +31,7 @@ class Anticipating_Customer(Customer):
                 weights.append(weight)
         
         else:
-            weights.append(-10)
+            [weights.append(-10) for _ in range(1 + config.undercutting_competitor)]
 
         # Append the price to the stored prices
         [self.last_prices[i].append(action[i]) for i in range(1 + config.undercutting_competitor)]

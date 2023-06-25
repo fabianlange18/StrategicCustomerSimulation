@@ -24,7 +24,7 @@ def train_model(evaluator):
 
         callbacks = setup_callbacks(evaluator)
         
-        print(f"\nTraining {config.rl_algorithm} model: {config.n_training_episodes} training episodes with each {config.episode_length} steps")
+        print(f"\nTraining {config.rl_algorithm} model {config.run_name}: {config.n_training_episodes} training episodes with each {config.episode_length} steps")
         model.learn(config.episode_length * config.n_training_episodes, callback=callbacks, progress_bar=True)
 
         model.save(f'{config.summary_dir}model')

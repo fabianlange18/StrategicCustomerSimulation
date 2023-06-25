@@ -13,7 +13,7 @@ class Price_Aware_Customer(Customer):
     def __init__(self):
         self.name = "price_aware"
         self.ability_to_wait = True
-        self.last_prices = [deque([], maxlen=config.n_timesteps_saving) for _ in range(config.n_vendors)]
+        self.last_prices = [deque([], maxlen=config.n_timesteps_saving) for _ in range(1 + config.undercutting_competitor)]
 
     def generate_purchase_probabilities_from_offer(self, state, action) -> Tuple[np.array, int]:
 
@@ -23,8 +23,14 @@ class Price_Aware_Customer(Customer):
             weights.append(10)
         else:
             weights.append(-10)
+        
+        if config.undercutting_competitor:
+            if len(self.last_prices[1]) >= config.n_timesteps_saving and min(self.last_prices[1]) * 0.85 > action[1]:
+                weights.append(10)
+            else:
+                weights.append(-10)
 
         # Append the price to the stored prices
-        [self.last_prices[i].append(action[i]) for i in range(config.n_vendors)]
+        [self.last_prices[i].append(action[i]) for i in range(1 + config.undercutting_competitor)]
 
         return softmax(np.array(weights)), min(self.last_prices[0]) * 0.85
