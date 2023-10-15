@@ -145,7 +145,7 @@ class Market(Env):
         if not simulation_mode and self.s[0] % config.episode_length < config.week_length:
             wandb.log(info)
 
-        return self.s, float(sum(reward)), done, info
+        return self.s, float(sum(reward)), done, False, info
 
 
     def init_customers(self):
@@ -171,4 +171,4 @@ class Market(Env):
 
     def reset(self, seed = 0):
         self.s = np.array([0, *[0 for _ in range(self.n_waiting_types + config.n_timesteps_saving)]])
-        return self.s
+        return self.s, {}
