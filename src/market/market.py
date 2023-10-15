@@ -1,4 +1,4 @@
-from gym import Env
+from gymnasium import Env
 from gymnasium.spaces.discrete import Discrete
 from gymnasium.spaces.multi_discrete import MultiDiscrete
 from gymnasium.spaces.box import Box
@@ -169,6 +169,6 @@ class Market(Env):
             return np.multiply(config.customer_mix, config.n_customers)
 
 
-    def reset(self):
+    def reset(self, seed = 0):
         self.s = np.array([0, *[0 for _ in range(self.n_waiting_types + config.n_timesteps_saving)]])
         return self.s
