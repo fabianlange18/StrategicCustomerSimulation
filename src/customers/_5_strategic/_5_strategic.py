@@ -1,4 +1,4 @@
-from gym import Env
+from gymnasium import Env
 from gymnasium.spaces.box import Box
 from gymnasium.spaces.discrete import Discrete
 from gymnasium.spaces.multi_discrete import MultiDiscrete
