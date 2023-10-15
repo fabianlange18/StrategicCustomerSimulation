@@ -5,7 +5,7 @@ import sys
 sys.path.append("..")
 
 import wandb
-import config as config
+import config
 
 from training import train_model
 
@@ -25,7 +25,6 @@ def main():
     )
 
     train_model(evaluator)
-    
     run.finish()
 
 

@@ -12,6 +12,7 @@ from customers._1_myopic import Myopic_Customer as myopic
 from customers._2_seasonal import Seasonal_Customer as seasonal
 from customers._3_price_aware import Price_Aware_Customer as price_aware
 from customers._4_anticipating import Anticipating_Customer as anticipating
+from customers._5_strategic._5_strategic import StrategicCustomer as strategic
 
 from .undercutting_vendor import Undercutting_Vendor
 
@@ -78,9 +79,7 @@ class Market(Env):
         # Devide customer arrivals by 2 if there is a competitor
         customer_arrivals = customer_arrivals / (1 + config.undercutting_competitor)
 
-
-        #### First vendor iteration ####
-
+        # Vendor iterations
         for i in range(1 + config.undercutting_competitor):
             
             state_index = 1

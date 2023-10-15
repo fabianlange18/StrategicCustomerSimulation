@@ -22,8 +22,6 @@ class EarlyStoppingCallback(BaseCallback):
         self.last_time_trigger = 0
         self.min_passes = int(config.n_training_episodes * config.episode_length / n_steps * 0.03)
 
-        self.customers = Market().customers
-
         self.rewards = []
 
         super(EarlyStoppingCallback, self).__init__(verbose)
@@ -68,10 +66,10 @@ class EarlyStoppingCallback(BaseCallback):
             print(config.run_name)
             if len(self.rewards) > 10:
                 print(f'Current reward: {round(self.rewards[-1], 2)}, before: {[round(element, 2) for element in self.rewards[-10:-1]]}')
-                print(f'Threshold [0.5 % of Mean]: {np.mean(self.rewards[-10:]) * 0.0005}')
+                print(f'Threshold [0.5 % of Mean]: {np.mean(self.rewards[-10:]) * 0.005}')
                 print(f'Std: {np.std(self.rewards[-10:])}')
 
-            if np.std(self.rewards[-10:]) < np.mean(self.rewards[-10:]) * 0.0005:
+            if np.std(self.rewards[-10:]) < np.mean(self.rewards[-10:]) * 0.005:
                 continue_training = False
 
             if self.min_passes != 0:

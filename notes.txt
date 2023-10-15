@@ -1,19 +1,25 @@
-Literatur:
-- wichtige Autoren in dem Gebiet / Standards
-
-Competitor:
-- Monopol kein Edgeworth: Richtig?
-- race to the buttom: nur wenn Kaufwahrscheinlichkeit 0 bei höherem Preis
--> Schrittweite Undercutting_Vendor kleiner
-
 Logging Strategie:
-- Competitor logging + std(prices) fehlt noch, ansonsten in Ordnung?
-- Halbe Perioden loggen (done)
+- std(prices) fehlt noch
+- Summary für Strategic Customer (PolicyEvaluationCallback anpassen)
 
-Callbacks:
-- Early Stopping nach 10 mal std(reward) < 5
--> 1 % of total rewards
+Anticipating Customer:
+- 3 Tage Woche
+- Monopol: Training beendet, Verhalten wie bei letztem Experiment
+- Duopol (! Fehler: Kunde wird zweimal pro Step aufgerufen und speichert daher auch 2 Preise pro Step in last_prices):
+    - sehr lange Trainingszeit, undercutting 
+    - beide Preistrajectorien vorhergesagt, kaufen nur bei min(agent) > action, state hat nur eigene letzte Preise
+    - Kunde kauft sehr oft bei Competitor
 
 Strategic Customer:
-- Action Space arbitrary: Percentage of available customers buying?
-- Test: RL-Kunde gegen SS + Undercutting_Vendor
+- Action Space: 
+    Discrete(0, 1) -> All arriving customers buy (True / False version)
+    Continous(0-1) -> Percentage of all arriving customers buy (increasing from 0 to 1 linearly)
+- Reward function:
+    10 - price --> always buying, no waiting
+    max(prices) - price --> always buying on min, otherwise waiting
+    min(prices) - price --> buys occasionally at min
+
+- Strategic customer -> rename
+- Write paragraph: Strategic customer self play
+- WTP und Consumer Rent misleading
+- TODOs: Related work

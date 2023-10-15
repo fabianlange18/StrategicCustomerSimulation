@@ -29,8 +29,6 @@ def train_model(evaluator):
 
         model.save(f'{config.summary_dir}model')
 
-        return model
-
 
 def setup_callbacks(evaluator):
 
@@ -38,7 +36,7 @@ def setup_callbacks(evaluator):
     simulation_plot_callback = SimulationPlotCallback(evaluator, n_steps=config.episode_length * config.sim_cb_n_episodes)
     early_stopping_callback = EarlyStoppingCallback(evaluator, n_steps=config.episode_length * config.early_stopping_cb_n_episodes)
 
-    callbacks = [WandbCallback(), policy_evaluation_callback, simulation_plot_callback, early_stopping_callback]
+    callbacks = [WandbCallback(), simulation_plot_callback, early_stopping_callback, policy_evaluation_callback]
     
     if config.customers.__contains__("seasonal"):
         seasonal_callback = SeasonalEvaluationCallback(evaluator, n_steps=config.episode_length * config.peval_cb_n_episodes)

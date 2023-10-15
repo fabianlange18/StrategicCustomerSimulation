@@ -51,9 +51,14 @@ class Evaluator:
         self.write_output(f"RL-Policy: {config.rl_policy}, Gamma: {config.gamma}, {'constant' if config.constant_learning_rate else 'linearly decreasing'} learning rate starting at {config.initial_learning_rate}\n")
 
 
-    def print_simulation_statistics(self, infos):
+    def print_simulation_statistics(self, infos, save_infos = True):
 
         infos = self.add_concatenated_infos(infos)
+
+        if save_infos:
+            f = open(f'{config.summary_dir}{config.info_file}', 'a')
+            f.write(str(infos))
+            f.close()
 
         self.write_output("\n\n\nStatistics for one deterministic simulation episode\n\n")
         self.write_output(f'{"Property": >40}{"Sum": >10}{"Mean": >12}{"Std": >10}{"Min": >12}{"Median": >14}{"Max": >13}\n\n')
@@ -220,21 +225,35 @@ class Evaluator:
             plt.show()
         plt.close()
 
-    def plot_prices(self, prices):
+    def plot_prices(self, prices, save_prices=True):
+
+        if save_prices:
+            f = open(f'{config.summary_dir}{config.info_file}', 'a')
+            f.write("\n\nprices\n\n")
+            f.write(str(prices))
+            f.close()
+
         for s in range(config.week_length):
             y = np.array(prices[s]['mean'])
             std = np.array(prices[s]['std'])
             x = np.arange(len(y))
             plt.plot(x, y, 'k-')
             plt.fill_between(x, (y - std).clip(min=0), (y + std).clip(max=config.max_price), alpha=0.5)
-            plt.title(f'Price for day {s}')
+            plt.title(f'Price for season {s}')
             if config.save_summary:
                 plt.savefig(f'{config.plot_dir}prices/state_{s}')
             else:
                 plt.show()
             plt.close()
 
-    def plot_rewards(self, rewards):
+    def plot_rewards(self, rewards, save_rewards = True):
+
+        if save_rewards:
+            f = open(f'{config.summary_dir}{config.info_file}', 'a')
+            f.write("\n\nrewards\n\n")
+            f.write(str(rewards))
+            f.close()
+
         plt.plot(rewards)
         plt.title("Rewards of the deterministic policy")
         if config.save_summary:

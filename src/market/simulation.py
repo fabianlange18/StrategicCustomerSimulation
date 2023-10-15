@@ -1,13 +1,13 @@
 import config
 from .market import Market
+from customers._5_strategic.baseline import StrategicCustomer
 
 import numpy as np
 from tqdm import trange
 
 def simulate_policy(model, deterministic, prog_bar=True):
 
-    # TODO: Choose vendor or customer environment
-    e = Market()
+    e = StrategicCustomer() if config.train_strategic else Market()
     s_next = e.s
 
     infos = {}
@@ -26,10 +26,11 @@ def simulate_policy(model, deterministic, prog_bar=True):
         for key in info.keys():
             if i == 0:
                 infos[key] = []
-                # Set first competitor price if competitor exists
             infos[key].append(info[key])
 
         if done:
             e.reset()
+            if config.train_strategic:
+                break
     
     return infos
