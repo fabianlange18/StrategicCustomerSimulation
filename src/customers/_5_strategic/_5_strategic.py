@@ -1,7 +1,7 @@
 from gym import Env
-from gym.spaces.box import Box
-from gym.spaces.discrete import Discrete
-from gym.spaces.multi_discrete import MultiDiscrete
+from gymnasium.spaces.box import Box
+from gymnasium.spaces.discrete import Discrete
+from gymnasium.spaces.multi_discrete import MultiDiscrete
 
 from stable_baselines3.ppo import PPO
 
