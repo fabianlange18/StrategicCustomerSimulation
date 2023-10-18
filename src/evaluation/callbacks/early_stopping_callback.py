@@ -76,6 +76,9 @@ class EarlyStoppingCallback(BaseCallback):
                 self.min_passes -= 1
                 continue_training = True
 
+            if self.n_calls == config.n_training_episodes * config.episode_length:
+                continue_training = False
+
             if not continue_training:
                 self.evaluator.write_output(f"\nTraining aborted after {self.num_timesteps} training steps because of conversion")
             

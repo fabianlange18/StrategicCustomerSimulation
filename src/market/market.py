@@ -47,8 +47,8 @@ class Market(Env):
 
     def step(self, action, simulation_mode=False):
 
-        # if isinstance(action, np.int64):
-        #     action = np.array([action])
+        if isinstance(action, np.int64):
+            action = np.array([action])
 
         reward = [0.0, 0.0]
         competitor_profit = [0.0, 0.0]
@@ -141,7 +141,7 @@ class Market(Env):
         self.s[0] += 1
         self.s[0] %= config.week_length
         self.step_counter += 1
-        done = self.s[0] == config.episode_length
+        done = self.step_counter == config.episode_length
 
         # Logging
         info["i0_total_reward"], info["i1_total_reward"] = reward[0], reward[1]

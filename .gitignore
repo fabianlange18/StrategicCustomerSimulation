@@ -10,4 +10,4 @@ __pycache__
 /tensorboard/*
 /results/*
 
-/plotting_util/*
+/src/plotting_util/*

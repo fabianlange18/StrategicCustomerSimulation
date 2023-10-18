@@ -62,17 +62,22 @@ class PolicyEvaluationCallback(BaseCallback):
         if (self.num_timesteps - self.last_time_trigger) >= self.n_steps:
             self.last_time_trigger = self.num_timesteps
 
-            state = np.array(self.locals['obs_tensor'][0])
+            try:
+                state = np.array(self.locals['obs_tensor'][0])
+            except KeyError:
+                state = np.array(self.locals['new_obs'][0])
 
             infos = simulate_policy(self.model, deterministic=True, prog_bar=False)
 
             reward = np.sum(infos[f'i0_total_reward'][int(config.episode_length/2):] + infos[f'i1_total_reward'][int(config.episode_length/2):])
             self.rewards.append(reward)
 
+            # [self.prices[s]['mean'].append(self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0]) for s in range(config.week_length)]
             [self.prices[s]['mean'].append(self.model.predict([s, *state[1:]], deterministic=True)[0][0]) for s in range(config.week_length)]
 
             prices_sample = []
             for _ in range(100):
+                # prices_sample.append([self.model.predict(np.array([s, *state[1:]]), deterministic=False)[0] for s in range(config.week_length)])
                 prices_sample.append([self.model.predict([s, *state[1:]], deterministic=False)[0][0] for s in range(config.week_length)])
 
             [self.prices[s]['std'].append(np.std(prices_sample, axis=0)[s]) for s in range(config.week_length)]

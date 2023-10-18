@@ -174,8 +174,8 @@ class Evaluator:
         plt.subplots_adjust(hspace=0.4)
 
         ax1.set_ylim(bottom=0)
-        ax2.set_ylim(bottom=0)
-        ax3.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0, top=config.max_price)
+        ax3.set_ylim(bottom=0, top=config.n_customers)
         ax5.set_ylim(bottom=0)
         ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
@@ -200,7 +200,7 @@ class Evaluator:
         plt.xlabel("t")
 
         # Profits Agent / Competitor
-        ax1.set_title('Profit by Agent / Competitor')
+        ax1.set_title('Reward by Agent / Competitor')
         ax1.step(x, infos[f'total_reward'], color='black', label='agent', where='post')
         ax1.step(x, infos[f'total_competitor_reward'], color='green', label='competitor', where='post')
 
@@ -220,6 +220,13 @@ class Evaluator:
         handles, labels = ax1.get_legend_handles_labels()
         fig.legend(handles, labels)
         plt.subplots_adjust(hspace=0.4)
+
+        ax1.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0, top=config.max_price)
+        ax3.set_ylim(bottom=0, top=config.n_customers)
+        ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         
         if show:
             plt.show()
