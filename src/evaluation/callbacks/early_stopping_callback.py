@@ -20,7 +20,7 @@ class EarlyStoppingCallback(BaseCallback):
 
         self.n_steps = n_steps
         self.last_time_trigger = 0
-        self.min_passes = int(config.n_training_episodes * config.episode_length / n_steps * 0.03)
+        self.min_passes = int(config.n_training_episodes * config.episode_length / n_steps * config.early_stopping_cb_min_amount)
 
         self.rewards = []
 
@@ -60,16 +60,16 @@ class EarlyStoppingCallback(BaseCallback):
             self.last_time_trigger = self.num_timesteps
 
             infos = simulate_policy(self.model, deterministic=True, prog_bar=False)
-            reward = np.sum(infos[f'i0_total_reward'] + infos[f'i1_total_reward'])
+            reward = np.sum(infos[f'i0_total_reward'][int(config.episode_length/2):] + infos[f'i1_total_reward'][int(config.episode_length/2):])
             self.rewards.append(reward)
             os.system('cls' if os.name == 'nt' else 'clear')
             print(config.run_name)
             if len(self.rewards) > 10:
                 print(f'Current reward: {round(self.rewards[-1], 2)}, before: {[round(element, 2) for element in self.rewards[-10:-1]]}')
-                print(f'Threshold [0.5 % of Mean]: {np.mean(self.rewards[-10:]) * 0.005}')
+                print(f'Threshold [{config.early_stopping_cb_threshold * 100} % of Mean]: {np.mean(self.rewards[-10:]) * config.early_stopping_cb_threshold}')
                 print(f'Std: {np.std(self.rewards[-10:])}')
 
-            if np.std(self.rewards[-10:]) < np.mean(self.rewards[-10:]) * 0.005:
+            if np.std(self.rewards[-10:]) < np.mean(self.rewards[-10:]) * config.early_stopping_cb_threshold:
                 continue_training = False
 
             if self.min_passes != 0:

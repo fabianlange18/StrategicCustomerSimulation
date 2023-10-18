@@ -66,7 +66,7 @@ class PolicyEvaluationCallback(BaseCallback):
 
             infos = simulate_policy(self.model, deterministic=True, prog_bar=False)
 
-            reward = np.sum(infos[f'i0_total_reward'] + infos[f'i1_total_reward'])
+            reward = np.sum(infos[f'i0_total_reward'][int(config.episode_length/2):] + infos[f'i1_total_reward'][int(config.episode_length/2):])
             self.rewards.append(reward)
 
             [self.prices[s]['mean'].append(self.model.predict([s, *state[1:]], deterministic=True)[0][0]) for s in range(config.week_length)]

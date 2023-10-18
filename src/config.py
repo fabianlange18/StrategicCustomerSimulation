@@ -4,18 +4,19 @@ max_waiting_pool = 1000
 n_timesteps_saving = 12 # 3 * week_length
 
 # Action Space
-max_price = 10.0
+max_price = 10
 support_continuous_action_space = True
 
 # Market
 n_customers = 50
+product_cost = 0
 
 # Customers (pricing functions: https://www.geogebra.org/graphing/kesahyyb)
 edgeworth = False
 reference_price = 5
 λ = 4
 nothing_preference = 1
-seasonal_reference_prices = [5, 4, 2, 6] # [3, 5, 4, 5, 6, 7, 5] # mean = 5
+seasonal_reference_prices = [4, 6, 7, 3] # [3, 5, 4, 5, 6, 7, 5] # mean = 5
 
 # Customer setup (mix must sum to 1)
 customers = ['myopic']
@@ -35,13 +36,13 @@ strategic_enter_waiting_pool = True
 # Competitor
 undercutting_competitor = False
 undercutting_competitor_step = 1
-undercutting_competitor_floor = 1
+undercutting_competitor_floor = 3
 undercutting_competitor_ceiling = None
 
 # Training & Simulation
 episode_length = week_length * 10
-rl_algorithm = 'ppo'
-n_training_episodes = 100000
+rl_algorithm = 'ddpg'
+n_training_episodes = 25000
 n_simulation_episodes = 1
 
 # RL Parameters
@@ -52,7 +53,7 @@ constant_learning_rate = True # decrease learning rate linearly to 0 if constant
 
 # Logging
 project_name = "[dev] Strategic Customer Simulation"
-run_name     = "01_Experiment_Myopic_homo"
+run_name     = "01_b_DDPG_Myopic_homo"
 run_notes    = ""
 wandb_mode   = 'disabled'
 save_summary = True
@@ -64,5 +65,7 @@ info_file    = "data.txt"
 
 # Callbacks
 peval_cb_n_episodes = n_training_episodes / 1000
-early_stopping_cb_n_episodes  = n_training_episodes / 100
+early_stopping_cb_n_episodes  = n_training_episodes / 1000
+early_stopping_cb_threshold  = 0.005
+early_stopping_cb_min_amount  = 0.03
 sim_cb_n_episodes = n_training_episodes / 100

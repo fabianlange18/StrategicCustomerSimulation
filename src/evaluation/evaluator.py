@@ -40,7 +40,7 @@ class Evaluator:
         if config.linearly_changing_customers:
             self.write_output("Customer mix altering linearly")
         if any([isinstance(customer, Seasonal_Customer) for customer in self.customers]):
-            self.write_output(f'\nReference Prices Seasonal Customer: {config.seasonal_reference_prices}\n')
+            self.write_output(f'\Beta Seasonal Customer: {config.seasonal_reference_prices}\n')
 
         # Competitor
         if config.undercutting_competitor:
@@ -52,6 +52,8 @@ class Evaluator:
 
 
     def print_simulation_statistics(self, infos, save_infos = True):
+
+        infos = {key: value[config.episode_length // 2:] for key, value in infos.items()}
 
         infos = self.add_concatenated_infos(infos)
 
@@ -127,19 +129,22 @@ class Evaluator:
 
         if waiting_pool:
             fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
+            ax4.set_ylim(bottom=0)
+            ax4.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
             ax4.set_title('Waiting Pool')
         else:
             fig, (ax1, ax2, ax3, ax5) = plt.subplots(4, sharex=True)
         
+        plt.xlabel("t")
 
         # Agent Profits by Customer Type
-        ax1.set_title('Agent Profits by Customer Types')
+        ax1.set_title('Agent Reward by Customer Types')
         if not config.undercutting_competitor:
             ax1.step(x, infos['total_reward'], color='black', label='agent', where='post')
         # for customer in customers
 
         # Reference Prices Customers
-        ax2.set_title("Customer Reference Prices")
+        ax2.set_title("Offer Price / Demand Beta")
         if not config.undercutting_competitor:
             ax2.step(x, infos[f'agent_offer_price'], color='black', label='agent', where='post')
         # for customer in customers
@@ -167,6 +172,15 @@ class Evaluator:
         fig.legend(handles, labels)
 
         plt.subplots_adjust(hspace=0.4)
+
+        ax1.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0)
+        ax3.set_ylim(bottom=0)
+        ax5.set_ylim(bottom=0)
+        ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        ax5.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         
         if show:
             plt.show()
@@ -182,6 +196,8 @@ class Evaluator:
     def plot_competition_trajectories(self, x, infos, show, save):
 
         fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+
+        plt.xlabel("t")
 
         # Profits Agent / Competitor
         ax1.set_title('Profit by Agent / Competitor')
@@ -218,9 +234,10 @@ class Evaluator:
 
     def plot_seasonal_diff(self, values, title):
         plt.plot(values)
-        plt.title(title)
+        plt.title("Difference between actual and optimal " + title)
+        plt.xlabel("Evaluation Steps")
         if config.save_summary:
-            plt.savefig(f"{config.plot_dir}0_Seasonal_{title}")
+            plt.savefig(f"{config.plot_dir}0_Seasonal_{title}_Diff")
         else:
             plt.show()
         plt.close()
@@ -240,6 +257,8 @@ class Evaluator:
             plt.plot(x, y, 'k-')
             plt.fill_between(x, (y - std).clip(min=0), (y + std).clip(max=config.max_price), alpha=0.5)
             plt.title(f'Price for season {s}')
+            plt.xlabel("Evaluation Steps")
+            plt.ylabel("Price")
             if config.save_summary:
                 plt.savefig(f'{config.plot_dir}prices/state_{s}')
             else:
@@ -256,6 +275,8 @@ class Evaluator:
 
         plt.plot(rewards)
         plt.title("Rewards of the deterministic policy")
+        plt.xlabel("Evaluation Steps")
+        plt.ylabel("Simulated reward of one episode")
         if config.save_summary:
             plt.savefig(f'{config.summary_dir}rewards')
         else:

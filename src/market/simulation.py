@@ -21,7 +21,7 @@ def simulate_policy(model, deterministic, prog_bar=True):
     for i in loop_range:
 
         action = model.predict(s_next, deterministic=deterministic)[0]
-        s_next, reward, done, _ , info = e.step(np.array(action), simulation_mode=True)
+        s_next, reward, done, info = e.step(np.array(action), simulation_mode=True) # _ ,
     
         for key in info.keys():
             if i == 0:

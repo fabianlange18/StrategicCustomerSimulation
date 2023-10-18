@@ -78,8 +78,8 @@ class SeasonalEvaluationCallback(BaseCallback):
         actual_prices = self.predict_prices()
         expected_profits_per_customer = calculate_expected_reward(actual_prices)
 
-        self.evaluator.plot_seasonal_diff(self.price_diffs, 'Price_Diff')
-        self.evaluator.plot_seasonal_diff(self.profit_diffs, 'Profit_Diff')
+        self.evaluator.plot_seasonal_diff(self.price_diffs, 'Prices')
+        self.evaluator.plot_seasonal_diff(self.profit_diffs, 'Profits')
         self.evaluator.print_seasonal_policy_stats(actual_prices, expected_profits_per_customer, self.perfect_prices, self.perfect_profits_per_customer)
 
         pass

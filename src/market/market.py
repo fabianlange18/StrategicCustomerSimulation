@@ -1,7 +1,7 @@
-from gymnasium import Env
-from gymnasium.spaces.discrete import Discrete
-from gymnasium.spaces.multi_discrete import MultiDiscrete
-from gymnasium.spaces.box import Box
+from gym import Env
+from gym.spaces.discrete import Discrete
+from gym.spaces.multi_discrete import MultiDiscrete
+from gym.spaces.box import Box
 
 import wandb
 import config
@@ -47,6 +47,9 @@ class Market(Env):
 
     def step(self, action, simulation_mode=False):
 
+        # if isinstance(action, np.int64):
+        #     action = np.array([action])
+
         reward = [0.0, 0.0]
         competitor_profit = [0.0, 0.0]
 
@@ -72,12 +75,13 @@ class Market(Env):
         # Logging
         info["i0_agent_offer_price"] = action[0]
         info["i1_agent_offer_price"] = action[0]
+        
+        # Devide customer arrivals by 2 if there is a competitor
+        customer_arrivals = customer_arrivals / (1 + config.undercutting_competitor)
+        
         for i, customer in enumerate(self.customers):
             info[f"i0_n_{customer.name}"] = customer_arrivals[i]
             info[f"i1_n_{customer.name}"] = customer_arrivals[i]
-
-        # Devide customer arrivals by 2 if there is a competitor
-        customer_arrivals = customer_arrivals / (1 + config.undercutting_competitor)
 
         # Vendor iterations
         for i in range(1 + config.undercutting_competitor):
@@ -103,10 +107,10 @@ class Market(Env):
                     customer_decisions = probability_distribution * customer_arrivals[j]
 
                 # Calculate reward
-                customer_reward = customer_decisions[1] * action[0]
+                customer_reward = customer_decisions[1] * (action[0] - config.product_cost)
 
                 if config.undercutting_competitor:
-                    customer_competitor_profit = customer_decisions[2] * action[1]
+                    customer_competitor_profit = customer_decisions[2] * (action[1] - config.product_cost)
                     competitor_profit[i] += customer_competitor_profit
                 reward[i] += customer_reward
 
@@ -145,7 +149,7 @@ class Market(Env):
         if not simulation_mode and self.s[0] % config.episode_length < config.week_length:
             wandb.log(info)
 
-        return self.s, float(sum(reward)), done, False, info
+        return self.s, float(sum(reward)), done, info #False, 
 
 
     def init_customers(self):
@@ -171,4 +175,4 @@ class Market(Env):
 
     def reset(self, seed = 0):
         self.s = np.array([0, *[0 for _ in range(self.n_waiting_types + config.n_timesteps_saving)]])
-        return self.s, {}
+        return self.s # , {}
