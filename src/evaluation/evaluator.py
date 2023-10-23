@@ -72,11 +72,11 @@ class Evaluator:
         for customer in self.customers:
             reward = np.sum(infos[f'{customer.name}_reward'])
             buy = np.sum(infos[f'n_{customer.name}_buy'])
-            self.write_output(f"\nAverage Agent Sales Price {customer.name}: {round(reward / buy, 3)}\n")
+            self.write_output(f"\nAverage Agent Sales Price {customer.name}: {np.round(reward / buy, 3)}\n")
         
-        self.write_output(f"Average Offer Price Agent: {round(np.mean(infos['agent_offer_price']), 3)}\n")
+        self.write_output(f"Average Offer Price Agent: {np.round(np.mean(infos['agent_offer_price']), 3)}\n")
         if config.undercutting_competitor:
-            self.write_output(f"Average Offer Price Competitor: {round(np.mean(infos['competitor_offer_price']), 3)}\n")
+            self.write_output(f"Average Offer Price Competitor: {np.round(np.mean(infos['competitor_offer_price']), 3)}\n")
 
 
 
@@ -129,7 +129,7 @@ class Evaluator:
 
         if waiting_pool:
             fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
-            ax4.set_ylim(bottom=0)
+            ax4.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
             ax4.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
             ax4.set_title('Waiting Pool')
         else:
@@ -174,9 +174,9 @@ class Evaluator:
         plt.subplots_adjust(hspace=0.4)
 
         ax1.set_ylim(bottom=0)
-        ax2.set_ylim(bottom=0, top=config.max_price)
-        ax3.set_ylim(bottom=0, top=config.n_customers)
-        ax5.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0, top=config.max_price + 1)
+        ax3.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
+        ax5.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
         ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
@@ -222,8 +222,8 @@ class Evaluator:
         plt.subplots_adjust(hspace=0.4)
 
         ax1.set_ylim(bottom=0)
-        ax2.set_ylim(bottom=0, top=config.max_price)
-        ax3.set_ylim(bottom=0, top=config.n_customers)
+        ax2.set_ylim(bottom=0, top=config.max_price + 1)
+        ax3.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
         ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
@@ -302,8 +302,8 @@ class Evaluator:
         self.seasonal_policy_writer(perfect_prices, perfect_profits_per_customer)
 
         self.write_output("\nPERFORMANCE\n")
-        self.write_output(f"Reaching {round(calculate_mean_difference(actual_prices, perfect_prices) * 100, 2)} % of optimal prices\n")
-        self.write_output(f"Reaching {round(calculate_mean_difference(expected_profits_per_customer, perfect_profits_per_customer) * 100, 2)} % of optimal profits")
+        self.write_output(f"Reaching {np.round(calculate_mean_difference(actual_prices, perfect_prices) * 100, 2)} % of optimal prices\n")
+        self.write_output(f"Reaching {np.round(calculate_mean_difference(expected_profits_per_customer, perfect_profits_per_customer) * 100, 2)} % of optimal profits")
 
 
     def seasonal_policy_writer(self, prices, profits_per_customer):
@@ -315,11 +315,11 @@ class Evaluator:
         week_rewards = np.sum(profits_all_customers)
         episode_rewards = week_rewards * int(config.episode_length / config.week_length)
 
-        rounded_prices = [round(price, 2) for price in prices]
-        rounded_profits_per_cust = [round(profit, 2) for profit in profits_per_customer]
-        rounded_profits_all_cust = [round(profit, 2) for profit in profits_all_customers]
-        rounded_optimal_week_rewards = round(week_rewards, 2)
-        rounded_optimal_episode_rewards = round(episode_rewards, 2)
+        rounded_prices = [np.round(price, 2) for price in prices]
+        rounded_profits_per_cust = [np.round(profit, 2) for profit in profits_per_customer]
+        rounded_profits_all_cust = [np.round(profit, 2) for profit in profits_all_customers]
+        rounded_optimal_week_rewards = np.round(week_rewards, 2)
+        rounded_optimal_episode_rewards = np.round(episode_rewards, 2)
 
         output = f'Policy Statistics for Prices: {rounded_prices}\nProfits per seasonal Customer: {rounded_profits_per_cust}\nProfits all seasonal Customers: {rounded_profits_all_cust}\nReward per Week: {rounded_optimal_week_rewards}\nReward per Episode: {rounded_optimal_episode_rewards}\n'
         self.write_output(output)

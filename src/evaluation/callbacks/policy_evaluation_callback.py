@@ -72,13 +72,17 @@ class PolicyEvaluationCallback(BaseCallback):
             reward = np.sum(infos[f'i0_total_reward'][int(config.episode_length/2):] + infos[f'i1_total_reward'][int(config.episode_length/2):])
             self.rewards.append(reward)
 
+            [self.prices[s]['mean'].append(self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0]) for s in range(config.week_length)]
+            
+            ## DQN ##
             # [self.prices[s]['mean'].append(self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0]) for s in range(config.week_length)]
-            [self.prices[s]['mean'].append(self.model.predict([s, *state[1:]], deterministic=True)[0][0]) for s in range(config.week_length)]
 
             prices_sample = []
             for _ in range(100):
+                prices_sample.append([self.model.predict(np.array([s, *state[1:]]), deterministic=False)[0] for s in range(config.week_length)])
+                
+                ## DQN ##
                 # prices_sample.append([self.model.predict(np.array([s, *state[1:]]), deterministic=False)[0] for s in range(config.week_length)])
-                prices_sample.append([self.model.predict([s, *state[1:]], deterministic=False)[0][0] for s in range(config.week_length)])
 
             [self.prices[s]['std'].append(np.std(prices_sample, axis=0)[s]) for s in range(config.week_length)]
 
