@@ -53,14 +53,15 @@ class Evaluator:
 
     def print_simulation_statistics(self, infos, save_infos = True):
 
-        infos = {key: value[config.episode_length // 2:] for key, value in infos.items()}
-
-        infos = self.add_concatenated_infos(infos)
-
         if save_infos:
             f = open(f'{config.summary_dir}{config.info_file}', 'a')
             f.write(str(infos))
             f.close()
+
+        infos = {key: value[config.episode_length // 2:] for key, value in infos.items()}
+
+        infos = self.add_concatenated_infos(infos)
+
 
         self.write_output("\n\n\nStatistics for one deterministic simulation episode\n\n")
         self.write_output(f'{"Property": >40}{"Sum": >10}{"Mean": >12}{"Std": >10}{"Min": >12}{"Median": >14}{"Max": >13}\n\n')
@@ -177,10 +178,11 @@ class Evaluator:
         ax2.set_ylim(bottom=0, top=config.max_price + 1)
         ax3.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
         ax5.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
-        ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
-        ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
-        ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
-        ax5.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+        if config.n_timesteps_saving > 0:
+            ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            ax5.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         
         if show:
             plt.show()

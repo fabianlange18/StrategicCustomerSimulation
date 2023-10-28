@@ -18,15 +18,22 @@ class Price_Aware_Customer(Customer):
     def generate_purchase_probabilities_from_offer(self, state, action) -> Tuple[np.array, int]:
 
         weights = [config.nothing_preference]
+        reference_price = config.seasonal_reference_prices[state[0]]
 
         if len(self.last_prices[0]) >= config.n_timesteps_saving and min(self.last_prices[0]) * 0.85 > action[0]:
             weights.append(10)
+            # price = action[0]
+            # weight = self.calculate_weight(price, reference_price = reference_price)
+            # weights.append(weight)
         else:
             weights.append(-10)
         
         if config.undercutting_competitor:
             if len(self.last_prices[1]) >= config.n_timesteps_saving and min(self.last_prices[1]) * 0.85 > action[1]:
                 weights.append(10)
+                # price = action[1]
+                # weight = self.calculate_weight(price, reference_price = reference_price)
+                # weights.append(weight)
             else:
                 weights.append(-10)
 

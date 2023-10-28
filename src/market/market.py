@@ -10,6 +10,7 @@ from collections import defaultdict
 
 from customers._1_myopic import Myopic_Customer as myopic
 from customers._2_seasonal import Seasonal_Customer as seasonal
+from customers._2b_seasonal_recurring import Recurring_Customer as recurring
 from customers._3_price_aware import Price_Aware_Customer as price_aware
 from customers._4_anticipating import Anticipating_Customer as anticipating
 from customers._5_strategic._5_strategic import StrategicCustomer as strategic

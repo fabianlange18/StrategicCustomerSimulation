@@ -90,7 +90,7 @@ class SeasonalEvaluationCallback(BaseCallback):
         except KeyError:
             state = np.array(self.locals['new_obs'][0])            
             
-        actual_prices = [self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0] for s in range(config.week_length)]
+        actual_prices = np.array([self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0][0] for s in range(config.week_length)])
         
         ## DQN ##
         # actual_prices = [self.model.predict(np.array([s, *state[1:]]), deterministic=True)[0] for s in range(config.week_length)]
