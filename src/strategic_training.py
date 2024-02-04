@@ -1,9 +1,10 @@
 import config
 import wandb
+from wandb.integration.sb3 import WandbCallback
 
 from evaluation.evaluator import Evaluator
 from training import get_learning_rate, setup_callbacks
-from customers._5_strategic.baseline import StrategicCustomer
+from customers._5_strategic._5_strategic import StrategicCustomer
 
 from stable_baselines3.ppo import PPO
 from stable_baselines3.common.monitor import Monitor
@@ -21,7 +22,7 @@ def train_strategic_customer(evaluator):
 
     callbacks = setup_callbacks(evaluator)
 
-    model.learn(config.episode_length * config.n_training_episodes, callback=callbacks, progress_bar=True)
+    model.learn(config.episode_length * config.n_training_episodes, callback=WandbCallback(), progress_bar=True) #, callback=callbacks
 
     model.save(f'{config.summary_dir}model')
 

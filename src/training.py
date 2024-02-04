@@ -18,9 +18,9 @@ from evaluation.callbacks.early_stopping_callback import EarlyStoppingCallback
 
 from wandb.integration.sb3 import WandbCallback
 
-def train_model(evaluator):
+def train_model(evaluator, model):
 
-        model = select_model()
+        model = select_model(model)
 
         callbacks = setup_callbacks(evaluator)
         
@@ -47,11 +47,16 @@ def setup_callbacks(evaluator):
     return callback_list
 
 
-def select_model():
+def select_model(model):
+
     
     e = Market()
 
     e = Monitor(e, config.tb_dir)
+    
+    if not model == None:
+        model.set_env(e)
+        return model
 
     learning_rate = get_learning_rate()
     

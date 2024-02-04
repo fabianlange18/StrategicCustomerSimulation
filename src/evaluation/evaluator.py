@@ -106,7 +106,7 @@ class Evaluator:
                 infos[f'n_{customer.name}'] = list(chain(*zip(infos[f'i0_n_{customer.name}'], infos[f'i1_n_{customer.name}'])))
                 infos[f'{customer.name}_reference_price'] = list(chain(*zip(infos[f'i0_{customer.name}_reference_price'], infos[f'i1_{customer.name}_reference_price'])))
                 if customer.ability_to_wait:
-                    infos[f'n_{customer.name}_waiting'] = list(chain(*zip(infos[f'i0_n_{customer.name}_waiting'], infos[f'i1_n_{customer.name}_waiting'])))
+                    infos[f'n_{customer.name}_waiting'] = [(x + y) for x, y in zip(infos[f'i0_n_{customer.name}_waiting'], infos[f'i1_n_{customer.name}_waiting']) for _ in range(2)]
         
         if extend_one:
             for key in infos.keys():
@@ -115,9 +115,9 @@ class Evaluator:
         return infos
 
 
-    def plot_trajectories(self, infos, show = False, save = ""):
+    def plot_trajectories(self, infos, show = False, save = "", extend_one=True):
 
-        infos = self.add_concatenated_infos(infos, extend_one=True)
+        infos = self.add_concatenated_infos(infos, extend_one=extend_one)
 
         step = 0.5 if config.undercutting_competitor else 1
 
@@ -129,23 +129,23 @@ class Evaluator:
             waiting_pool = customer.ability_to_wait or waiting_pool
 
         if waiting_pool:
-            fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, sharex=True)
-            ax4.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
-            ax4.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True)
+            if config.n_timesteps_saving > 0:
+                ax4.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
             ax4.set_title('Waiting Pool')
         else:
-            fig, (ax1, ax2, ax3, ax5) = plt.subplots(4, sharex=True)
+            fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
         
         plt.xlabel("t")
 
         # Agent Profits by Customer Type
-        ax1.set_title('Agent Reward by Customer Types')
+        ax1.set_title('Agent Reward')
         if not config.undercutting_competitor:
             ax1.step(x, infos['total_reward'], color='black', label='agent', where='post')
         # for customer in customers
 
         # Reference Prices Customers
-        ax2.set_title("Offer Price / Demand Beta")
+        ax2.set_title("Offer Price / Price-Aware Demand")
         if not config.undercutting_competitor:
             ax2.step(x, infos[f'agent_offer_price'], color='black', label='agent', where='post')
         # for customer in customers
@@ -155,7 +155,7 @@ class Evaluator:
         # for customer in customers
 
         # Number of Customers per Type
-        ax5.set_title("Number of Customers per Type")
+        # ax5.set_title("Number of Customers per Type")
         # for customer in customers
             
         # Waiting Pool
@@ -165,9 +165,12 @@ class Evaluator:
             ax1.step(x, infos[f'{customer.name}_reward'], label=customer.name, where='post')
             ax2.step(x, infos[f'{customer.name}_reference_price'], label=customer.name, where='post')
             ax3.step(x, infos[f'n_{customer.name}_buy'], label=customer.name, where='post')
-            ax5.step(x, infos[f'n_{customer.name}'], label=customer.name, where='post')
-            if customer.ability_to_wait:
-                ax4.step(x, infos[f'n_{customer.name}_waiting'], label=customer.name, where='post')
+            # ax5.step(x, infos[f'n_{customer.name}'], label=customer.name, where='post')
+            if waiting_pool:
+                if customer.ability_to_wait:
+                    ax4.step(x, infos[f'n_{customer.name}_waiting'], label=customer.name, where='post')
+                else:
+                    next(ax4._get_lines.prop_cycler)
 
         handles, labels = ax1.get_legend_handles_labels()
         fig.legend(handles, labels)
@@ -176,13 +179,13 @@ class Evaluator:
 
         ax1.set_ylim(bottom=0)
         ax2.set_ylim(bottom=0, top=config.max_price + 1)
-        ax3.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
-        ax5.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
+        ax3.set_ylim(bottom=0)
+        # ax5.set_ylim(bottom=0, top=config.max_waiting_pool + 105)
         if config.n_timesteps_saving > 0:
             ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
             ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
             ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
-            ax5.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            # ax5.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
         
         if show:
             plt.show()
@@ -239,8 +242,6 @@ class Evaluator:
         plt.close()
 
 
-
-
     def plot_seasonal_diff(self, values, title):
         plt.plot(values)
         plt.title("Difference between actual and optimal " + title)
@@ -250,6 +251,7 @@ class Evaluator:
         else:
             plt.show()
         plt.close()
+
 
     def plot_prices(self, prices, save_prices=True):
 
@@ -273,6 +275,7 @@ class Evaluator:
             else:
                 plt.show()
             plt.close()
+
 
     def plot_rewards(self, rewards, save_rewards = True):
 
@@ -325,3 +328,71 @@ class Evaluator:
 
         output = f'Policy Statistics for Prices: {rounded_prices}\nProfits per seasonal Customer: {rounded_profits_per_cust}\nProfits all seasonal Customers: {rounded_profits_all_cust}\nReward per Week: {rounded_optimal_week_rewards}\nReward per Episode: {rounded_optimal_episode_rewards}\n'
         self.write_output(output)
+
+
+# Evaluation Helper
+    def plot_competition_one_picture(self, infos, save=""):
+
+        infos = self.add_concatenated_infos(infos, extend_one=True)
+
+        step = 0.5 if config.undercutting_competitor else 1
+
+        x = np.arange(stop=config.episode_length * config.n_simulation_episodes + step, step=step)
+
+        # check whether a waiting pool exists
+        waiting_pool = False
+        for customer in self.customers:
+            waiting_pool = customer.ability_to_wait or waiting_pool
+
+        if waiting_pool:
+            fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, sharex=True)
+            # ax4.set_ylim(bottom=0, top=config.max_waiting_pool + 105)
+            ax4.axvline(x=config.n_timesteps_saving, color='black', linestyle='--', label='Attunement')
+            ax4.set_title('Waiting Pool')
+        else:
+            fig, (ax1, ax2, ax3) = plt.subplots(3, sharex=True)
+
+        plt.xlabel("t")
+
+        for customer in self.customers:
+            if customer.ability_to_wait:
+                l3, = ax4.step(x, infos[f'n_{customer.name}_waiting'], label=customer.name, where='post')
+            else:
+                next(ax4._get_lines.prop_cycler)
+
+        # Profits Agent / Competitor
+        ax1.set_title('Reward by Agent / Competitor')
+        l1, = ax1.step(x, infos[f'total_reward'], color='black', label='agent', where='post')
+        l2, = ax1.step(x, infos[f'total_competitor_reward'], color='green', label='competitor', where='post')
+
+        # Prices
+        ax2.set_title("Offer Prices / Price-Aware Demand")
+        ax2.step(x, infos[f'agent_offer_price'], color='black', label='agent', where='post')
+        ax2.step(x, infos[f'competitor_offer_price'], color='green', label='competitor', where='post')
+
+        # Customer Decisions Agent / Competitor
+        ax3.set_title('Customer Decisions')
+        total_buying_decisions = np.sum([infos[f'n_{customer.name}_buy'] for customer in self.customers], axis=0)
+        total_competitor_buying_decisions = np.sum([infos[f'n_{customer.name}_competitor_buy'] for customer in self.customers], axis=0)
+        
+        ax3.step(x, total_buying_decisions, color='black', label='agent', where='post')
+        ax3.step(x, total_competitor_buying_decisions, color='green', label='competitor', where='post')
+
+        ax1.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0, top=config.max_price + 1)
+        # ax3.set_ylim(bottom=0, top=config.max_waiting_pool + 5)
+        ax1.axvline(x=config.n_timesteps_saving, color='black', linestyle='--')
+        ax2.axvline(x=config.n_timesteps_saving, color='black', linestyle='--')
+        ax3.axvline(x=config.n_timesteps_saving, color='black', linestyle='--')
+
+        handles = [l1, l2, l3]
+        labels = [l1.get_label(), l2.get_label(), l3.get_label()]
+
+        fig.legend(handles, labels)
+
+        plt.subplots_adjust(hspace=0.4)
+
+        if save != "" and config.save_summary:
+            plt.savefig(save)
+
+        plt.close()

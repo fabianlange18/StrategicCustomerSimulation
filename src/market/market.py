@@ -14,6 +14,7 @@ from customers._2b_seasonal_recurring import Recurring_Customer as recurring
 from customers._3_price_aware import Price_Aware_Customer as price_aware
 from customers._4_anticipating import Anticipating_Customer as anticipating
 from customers._5_strategic._5_strategic import StrategicCustomer as strategic
+from customers._5_rl_based import RL_based_Customer as rl_based
 
 from .undercutting_vendor import Undercutting_Vendor
 
