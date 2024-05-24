@@ -1,7 +1,7 @@
 # State Space
 week_length = 4
 max_waiting_pool = 1000
-n_timesteps_saving = 12
+n_timesteps_saving = 5
 
 # Action Space
 max_price = 10
@@ -19,8 +19,8 @@ nothing_preference = 1
 seasonal_reference_prices = [4, 6, 7, 3] # [3, 5, 4, 5, 6, 7, 5] # mean = 5
 
 # Customer setup (mix must sum to 1)
-customers = ['seasonal', 'recurring']
-customer_mix = [0.9, 0.1]
+customers = ['strategic']
+customer_mix = [1]
 linearly_changing_customers = False # scales linearly from [1, 0] to [0, 1]
 stochastic_customers = True
 
@@ -29,10 +29,10 @@ n_timesteps_predicting = week_length - 1
 n_lags = week_length
 
 # Strategic Customer
-train_strategic = False
+train_strategic = True
 vendor_model_path = '/Users/fabian/Developer/HPI/Masterarbeit/StrategicCustomerSimulation/results/02/02_Monopol_no_storage/model.zip'
 strategic_enter_waiting_pool = True
-strategic_model_path = '/Users/fabian/Developer/HPI/Masterarbeit/StrategicCustomerSimulation/results/07_Seasonal_Model_long/model.zip'
+strategic_model_path = '/Users/fabian/Developer/HPI/Masterarbeit/StrategicCustomerSimulation/results/07/07_Seaonal_Model/model.zip'
 
 # Competitor
 undercutting_competitor = False
@@ -43,7 +43,7 @@ undercutting_competitor_ceiling = None
 # Training & Simulation
 episode_length = week_length * 10
 rl_algorithm = 'ppo'
-n_training_episodes = 250000
+n_training_episodes = 250 / 2
 n_simulation_episodes = 1
 
 # RL Parameters
@@ -54,14 +54,13 @@ constant_learning_rate = True # decrease learning rate linearly to 0 if constant
 
 # Logging
 project_name = "[dev] Strategic Customer Simulation"
-run_name     = "00_check_recurring9-1_without_pool"
+run_name     = "07_Seasonal_Model_short"
 run_notes    = ""
 wandb_mode   = 'disabled'
 save_summary = True
-plot_dir = f"./results/{run_name}/plots/"
-tb_dir = f"./tensorboard/{run_name}/"
-summary_dir = f"./results/{run_name}/"
-
+plot_dir     = f"./results/{run_name}/plots/"
+tb_dir       = f"./tensorboard/{run_name}/"
+summary_dir  = f"./results/{run_name}/"
 summary_file = "summary.txt"
 info_file    = "data.txt"
 

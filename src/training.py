@@ -18,7 +18,7 @@ from evaluation.callbacks.early_stopping_callback import EarlyStoppingCallback
 
 from wandb.integration.sb3 import WandbCallback
 
-def train_model(evaluator, model):
+def train_model(evaluator, model = None):
 
         model = select_model(model)
 
