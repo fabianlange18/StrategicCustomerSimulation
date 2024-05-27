@@ -27,11 +27,11 @@ class Market(Env):
         
         # Init Waiting Pool
         self.n_waiting_types = sum([customer.ability_to_wait for customer in self.customers])
-        waiting_pool = [config.max_waiting_pool for _ in range(self.n_waiting_types)]
+        self.waiting_pool = [0 for _ in range(self.n_waiting_types)]
 
         # Init last prices Storage and Observation Space
         last_prices = [config.max_price * 100 for _ in range(config.n_timesteps_saving)]
-        self.observation_space = MultiDiscrete([config.week_length, *waiting_pool, *last_prices])
+        self.observation_space = MultiDiscrete([config.week_length, *last_prices])
 
         # Init Action Space
         self.action_space = Box(low=0.0, high=config.max_price, shape=(1,)) if config.support_continuous_action_space else Discrete(config.max_price)
@@ -59,13 +59,11 @@ class Market(Env):
         customer_arrivals = self.simulate_customer_arrivals(simulation_mode)
 
         # Add waiting customers
-        state_index = 1
         for i, customer in enumerate(self.customers):
             if customer.ability_to_wait:
-                customer_arrivals[i] += self.s[state_index]
-                self.s[state_index] = 0
-                state_index += 1
-        
+                customer_arrivals[i] += self.waiting_pool[0]
+                self.waiting_pool[0] = 0
+                
         # Init Logging
         info = defaultdict(int)
 
@@ -85,7 +83,7 @@ class Market(Env):
             info[f"i0_n_{customer.name}"] = customer_arrivals[i]
             info[f"i1_n_{customer.name}"] = customer_arrivals[i]
 
-        # Vendor iterations
+        # Vendor iteration
         for i in range(1 + config.undercutting_competitor):
             
             state_index = 1
@@ -126,18 +124,20 @@ class Market(Env):
 
                 # Not buying customers enter waiting pool
                 if customer.ability_to_wait:
-                    self.s[state_index] += customer_decisions[0]
-                    self.s[state_index] = min(self.s[state_index], config.max_waiting_pool - 1)
-                    info[f"i{i}_n_{customer.name}_waiting"] += self.s[state_index]
+                    self.waiting_pool[0] += customer_decisions[0]
+                    self.waiting_pool[0] = min(self.waiting_pool[0], config.max_waiting_pool - 1)
+                    info[f"i{i}_n_{customer.name}_waiting"] += self.waiting_pool[0]
                     state_index += 1
 
 
         # Store last (own) prices in last state dimensions
         if config.n_timesteps_saving > 0:
-            for _ in range(config.n_timesteps_saving - 1):
-                self.s[state_index] = self.s[state_index+1]
-                state_index += 1
-            self.s[state_index] = min(action[0] * 100, config.max_price * 100 - 1)
+            for i in range(config.n_timesteps_saving - 1):
+                self.s[-i-2] = self.s[-i-1]
+            if config.undercutting_competitor:
+                self.s[-1] = min(action[0] * 100, action[1] * 100, config.max_price * 100 - 1)
+            else:
+                self.s[-1] = min(action[0] * 100, config.max_price * 100 - 1)
 
         # Update state
         self.s[0] += 1
@@ -176,5 +176,6 @@ class Market(Env):
 
 
     def reset(self, seed = 0):
-        self.s = np.array([0, *[0 for _ in range(self.n_waiting_types + config.n_timesteps_saving)]])
+        self.s = np.array([0, *[0 for _ in range(config.n_timesteps_saving)]])
+        self.waiting_pool = [0 for _ in range(self.n_waiting_types)]
         return self.s # , {}
