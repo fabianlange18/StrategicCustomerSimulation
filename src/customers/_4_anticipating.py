@@ -13,9 +13,10 @@ class Anticipating_Customer(Customer):
 
     def __init__(self):
         self.name = "anticipating"
-        self.predict_min = False
+        self.predict_min = True
+        self.half_period = True
         self.ability_to_wait = True
-        self.last_prices = [deque([], maxlen=config.n_timesteps_saving) for _ in range(1 + config.undercutting_competitor - self.predict_min)]
+        self.last_prices = [deque([], maxlen=config.n_timesteps_saving) for _ in range(1 + config.undercutting_competitor - (config.undercutting_competitor * self.predict_min))]
         self.predictions = np.ndarray((1 + config.undercutting_competitor, config.n_timesteps_predicting))
 
     def generate_purchase_probabilities_from_offer(self, state, action) -> Tuple[np.array, int]:
@@ -42,7 +43,13 @@ class Anticipating_Customer(Customer):
             else:
                 weights.append(-10)
 
-        [self.last_prices[0].append(min(action[0], action[1]))]
+        if config.undercutting_competitor and self.half_period:
+            self.last_prices[0].append(min(action[0], action[1]))
+            self.half_period = False
+        elif not config.undercutting_competitor:
+            self.last_prices[0].append(action[0])
+        else:
+            self.half_period = True
 
         return softmax(np.array(weights)), self.predictions[0][0]
 
@@ -87,5 +94,5 @@ class Anticipating_Customer(Customer):
                 AutoReg(list(self.last_prices[i]), lags = config.n_lags)
                 .fit()
                 .predict(start= len(self.last_prices[i]), end= len(self.last_prices[i]) + config.n_timesteps_predicting - 1)
-                    for i in range(1 + config.undercutting_competitor - self.predict_min)]
+                    for i in range(1 + config.undercutting_competitor - (config.undercutting_competitor * self.predict_min))]
         return len(self.last_prices[0]) == config.n_timesteps_saving

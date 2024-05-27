@@ -13,6 +13,7 @@ class Price_Aware_Customer(Customer):
     def __init__(self):
         self.name = "price_aware"
         self.ability_to_wait = True
+        self.predict_min = True
         self.discount = 0.85
         self.last_prices = [deque([], maxlen=4) for _ in range(1 + config.undercutting_competitor)]
 
@@ -39,6 +40,9 @@ class Price_Aware_Customer(Customer):
                 weights.append(-10)
 
         # Append the price to the stored prices
-        [self.last_prices[i].append(action[i]) for i in range(1 + config.undercutting_competitor)]
+        if self.predict_min and config.undercutting_competitor:
+            [self.last_prices[i].append(min(action[0], action[1])) for i in range(1 + config.undercutting_competitor)]
+        else:
+            [self.last_prices[i].append(action[i]) for i in range(1 + config.undercutting_competitor)]
 
         return softmax(np.array(weights)), min(self.last_prices[0])

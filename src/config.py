@@ -19,10 +19,10 @@ nothing_preference = 1
 seasonal_reference_prices = [4, 6, 7, 3] # [3, 5, 4, 5, 6, 7, 5] # mean = 5
 
 # Customer setup (mix must sum to 1)
-customers = ['seasonal', 'recurring']
+customers = ['seasonal', 'anticipating']
 customer_mix = [0.9, 0.1]
 linearly_changing_customers = False # scales linearly from [1, 0] to [0, 1]
-stochastic_customers = True
+stochastic_customers = False
 
 # Anticipating Customer
 n_timesteps_predicting = week_length - 1
@@ -35,26 +35,26 @@ strategic_enter_waiting_pool = True
 strategic_model_path = '/Users/fabian/Developer/HPI/Masterarbeit/StrategicCustomerSimulation/results/07_Seasonal_Model_long/model.zip'
 
 # Competitor
-undercutting_competitor = False
+undercutting_competitor = True
 undercutting_competitor_step = 1
-undercutting_competitor_floor = 0
+undercutting_competitor_floor = 1
 undercutting_competitor_ceiling = None
 
 # Training & Simulation
 episode_length = week_length * 10
 rl_algorithm = 'ppo'
-n_training_episodes = 250000
+n_training_episodes = 50000
 n_simulation_episodes = 1
 
 # RL Parameters
 rl_policy = 'MlpPolicy'
-gamma = 1
+gamma = 0.9999
 initial_learning_rate = 0.00003
 constant_learning_rate = True # decrease learning rate linearly to 0 if constant_learning_rate = False
 
 # Logging
 project_name = "[dev] Strategic Customer Simulation"
-run_name     = "00_check_recurring9-1_without_pool"
+run_name     = "paper_04_anticipating_9-1_duopoly"
 run_notes    = ""
 wandb_mode   = 'disabled'
 save_summary = True
