@@ -2,6 +2,8 @@
 *.pyc
 __pycache__
 
+.vscode
+
 # System
 .DS_Store
 
